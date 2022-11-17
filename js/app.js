@@ -49,12 +49,14 @@ function recoverid(){
 
             // Enregistrer les données dans localStorage si disponibilité sinon envoyé un message d'erreur
             if(disponibilite == true){
+                // Ajoter une ligne dans le panier
+                ajouteLigne(LImage, LeTitre, LePrix, LaQuantite);
                 // Enregistrer dans localStorage l'attribut récupéré
                 saveInLocalStorage(boutonclique);
                 miseAJourQuantitePanier(calculQuantitePanier());
                 updateAvailabilites();
                 displayAvailabilites();
-                ajouterNotification(boutonclique,notificationAjoutPanier);
+                ajouterNotification(notificationAjoutPanier, boutonclique);
             }else{
                 console.log("LocalStorage n'est pas mis à jour car il n'y a plus de place");
             }
@@ -150,6 +152,76 @@ function miseAJourQuantitePanier(table){
     // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
     window.localStorage.setItem(key, stockageObject)
 };
+
+
+/* ------------------------------------------------------
+LA FONCTION AFFICHAGE PANIER - REMI & JAMES
+------------------------------------------------------- */
+// Déclaration les variables à afficher dans le panier
+// A metre à jour en fonction du bouton sur lequel on a cliqué
+
+let LImage = 'futur image';
+let LArticle = 'Nouvelle ligne supérieure';
+let LePrix = '100';
+let LaQuantite = '1';
+let LeTitre = "titre";
+
+
+function ajouteLigne(LImage, LeTitre, LePrix, LaQuantite) {
+    // Récupération d'une référence à la table
+    const refTable = document.querySelector('tbody');
+    console.log(refTable);
+    // Insère une ligne dans la table à l'indice de ligne 0
+    let nouvelleLigne = refTable.insertRow(0);
+    nouvelleLigne.innerHTML = '<td></td>';
+
+    // Insère une cellule dans la ligne à l'indice n
+    let nouvelleCellule0 = nouvelleLigne.insertCell(0);
+    let nouvelleCellule1 = nouvelleLigne.insertCell(1);
+    let nouvelleCellule2 = nouvelleLigne.insertCell(2);
+    let nouvelleCellule3 = nouvelleLigne.insertCell(3);
+    let nouvelleCellule4 = nouvelleLigne.insertCell(4);
+
+    // Ajoute un nœud texte à la cellule
+    // Remplacer createTextNode par createElement pour l'image
+    let cell0 = document.createTextNode(LImage)
+    let cell1 = document.createTextNode(LeTitre)
+    let cell2 = document.createTextNode(LePrix)
+    let cell3 = document.createTextNode(LaQuantite)
+    let cell4 = document.createElement("INPUT")
+    // Ajouter setAttribute img
+    cell4.setAttribute("TYPE", "button")
+    cell4.setAttribute("NAME", "Bouton suppression ligne")
+    cell4.setAttribute("VALUE", "SUPP")
+
+    // Mettre la bonne classe pour le bouton
+    cell4.classList ='deletebtn';
+      
+    cell4.addEventListener("click", function(){
+        // Supprime le bouton puis son parent
+      let cible =this.parentElement.parentElement;
+      cible.remove();
+      console.log(cible, " supprimé");
+    })
+
+    // Créer les cellules de la ligne
+    nouvelleCellule0.appendChild(cell0);
+    nouvelleCellule1.appendChild(cell1);
+    nouvelleCellule2.appendChild(cell2);
+    nouvelleCellule3.appendChild(cell3);
+    nouvelleCellule4.appendChild(cell4);
+}
+
+/*
+Object.keys(window.localStorage).forEach(function(value) {
+let elem = COURSES[value];
+if (elem == undefined) {
+    elem = null;
+} else {
+    ajouteLigne(elem.img, elem.title, elem.initial_price, elem.stock);
+}
+});
+*/
 
 /************************************
  * 
@@ -261,7 +333,7 @@ const notificationPanierVide = "Le panier a été vidé";
 // Déclarer une position de départ pour l'ajout des notifications
 let compteurPosition = 0;
 
-function ajouterNotification(idCours, messageAffiche){
+function ajouterNotification(messageAffiche, idCours){
     // Créer le conteneur de la notification
     const notificationContainer = document.createElement('div');
     notificationContainer.setAttribute('id','notification_container');
@@ -318,29 +390,9 @@ function ajouterNotification(idCours, messageAffiche){
     // Supprimer la notification au bout de 3 secondes
     setTimeout(function(){
         notificationContainer.remove();
-        compteurPosition--
+        compteurPosition--;
     }, 3000);  
 };
-
-/*
-#notification_container {
-  position: fixed;
-  top: 40px;
-  right: 25px;
-
-  width: 200px;
-  height: auto;
-}
-*/
-
-
-
-
-
-
-
-
-
 
 /************************************
  * 
@@ -359,4 +411,5 @@ emptyCart.addEventListener("click",function(){
     // Mettre à jour les valeurs de disponibilité et leur contenu en HTML.
     updateAvailabilites();
     displayAvailabilites();
+    ajouterNotification(notificationPanierVide);
 });
