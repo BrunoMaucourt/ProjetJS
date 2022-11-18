@@ -21,6 +21,8 @@ const lienCoursMYSQL = document.querySelector('[data-id="5"]');
 const ficheMYSQL = lienCoursMYSQL.parentNode.parentNode;
 let showMYSQL = true;
 
+// Génerer l'affichage dynamique
+affichageDynamique()
 // Charger la fonction pour récupérer les cliques sur les boutons
 recoverid();
 // Mettre à jour les quantitées disponibles sur la page HTML
@@ -49,16 +51,16 @@ function recoverid(){
 
             // Enregistrer les données dans localStorage si disponibilité sinon envoyé un message d'erreur
             if(disponibilite == true){
-                // Ajoter une ligne dans le panier
-                ajouteLigne(LImage, LeTitre, LePrix, LaQuantite);
                 // Enregistrer dans localStorage l'attribut récupéré
                 saveInLocalStorage(boutonclique);
                 miseAJourQuantitePanier(calculQuantitePanier());
                 updateAvailabilites();
                 displayAvailabilites();
                 ajouterNotification(notificationAjoutPanier, boutonclique);
+                // Ajoter une ligne dans le panier
+                ajouteLigne(boutonclique);
             }else{
-                console.log("LocalStorage n'est pas mis à jour car il n'y a plus de place");
+                ajouterNotification(notificationCoursIndisponibleDebut,boutonclique);
             }
         });
     });
@@ -104,7 +106,7 @@ function saveInLocalStorage(value){
     stockageObject= JSON.stringify(panier);
 
     // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
-    window.localStorage.setItem(key, stockageObject)
+    window.localStorage.setItem(key, stockageObject);
 };
 
 // Calculer les quantités de cours dans le panier
@@ -157,22 +159,17 @@ function miseAJourQuantitePanier(table){
 /* ------------------------------------------------------
 LA FONCTION AFFICHAGE PANIER - REMI & JAMES
 ------------------------------------------------------- */
-// Déclaration les variables à afficher dans le panier
-// A metre à jour en fonction du bouton sur lequel on a cliqué
 
-let LImage = 'futur image';
-let LArticle = 'Nouvelle ligne supérieure';
-let LePrix = '100';
-let LaQuantite = '1';
-let LeTitre = "titre";
+function ajouteLigne(idCours){
 
+    // Créer une variable test qui recherche une clée Panier dans localStorage
+    let panierProduit = checkPanierlocalStorage();
 
-function ajouteLigne(LImage, LeTitre, LePrix, LaQuantite) {
     // Récupération d'une référence à la table
     const refTable = document.querySelector('tbody');
-    console.log(refTable);
     // Insère une ligne dans la table à l'indice de ligne 0
     let nouvelleLigne = refTable.insertRow(0);
+
     nouvelleLigne.innerHTML = '<td></td>';
 
     // Insère une cellule dans la ligne à l'indice n
@@ -182,27 +179,25 @@ function ajouteLigne(LImage, LeTitre, LePrix, LaQuantite) {
     let nouvelleCellule3 = nouvelleLigne.insertCell(3);
     let nouvelleCellule4 = nouvelleLigne.insertCell(4);
 
-    // Ajoute un nœud texte à la cellule
-    // Remplacer createTextNode par createElement pour l'image
-    let cell0 = document.createTextNode(LImage)
-    let cell1 = document.createTextNode(LeTitre)
-    let cell2 = document.createTextNode(LePrix)
-    let cell3 = document.createTextNode(LaQuantite)
-    let cell4 = document.createElement("INPUT")
-    // Ajouter setAttribute img
-    cell4.setAttribute("TYPE", "button")
-    cell4.setAttribute("NAME", "Bouton suppression ligne")
-    cell4.setAttribute("VALUE", "SUPP")
+    // Ajoute un nœud texte à chaque cellule à partir du contenu de COURSES
+
+    let cell0 = document.createElement('img');
+    cell0.setAttribute('src',"img/courses/"+COURSES[idCours]['img']);
+    let cell1 = document.createTextNode(COURSES[idCours]["title"]);
+    let cell2 = document.createTextNode(COURSES[idCours]["initial_price"]);
+    let cell3 = document.createTextNode(panierProduit.QTT[idCours-1]);
+    let cell4 = document.createElement("INPUT");
+    cell4.setAttribute("TYPE", "button");
 
     // Mettre la bonne classe pour le bouton
-    cell4.classList ='deletebtn';
+    cell4.classList.add('supprimer-item');
       
     cell4.addEventListener("click", function(){
         // Supprime le bouton puis son parent
-      let cible =this.parentElement.parentElement;
-      cible.remove();
-      console.log(cible, " supprimé");
-    })
+        let cible =this.parentElement.parentElement;
+        cible.remove();
+        console.log(cible, " supprimé");
+    });
 
     // Créer les cellules de la ligne
     nouvelleCellule0.appendChild(cell0);
@@ -211,17 +206,6 @@ function ajouteLigne(LImage, LeTitre, LePrix, LaQuantite) {
     nouvelleCellule3.appendChild(cell3);
     nouvelleCellule4.appendChild(cell4);
 }
-
-/*
-Object.keys(window.localStorage).forEach(function(value) {
-let elem = COURSES[value];
-if (elem == undefined) {
-    elem = null;
-} else {
-    ajouteLigne(elem.img, elem.title, elem.initial_price, elem.stock);
-}
-});
-*/
 
 /************************************
  * 
@@ -261,38 +245,56 @@ function checkAvailabilities(idATester){
 // Fonction pour mettre à jour dans localStorage le nombre de place disponible
 function updateAvailabilites(){
 
-        // Récupérer le panier conservé dans le localStorage
-        let panier = checkPanierlocalStorage();
-        //let tableauQuantite = panier.QTT 
+    // Récupérer le panier conservé dans le localStorage
+    let panier = checkPanierlocalStorage();
 
-        // Vérifier si un tableau disponibilité existe dans localStorage
-        // Créer le tableau s'il n'existe pas
-        // Charger le tableau s'il existe
+    // Vérifier si un tableau disponibilité existe dans localStorage
+    // Créer le tableau s'il n'existe pas
+    if (panier.Disponibilite.length == 0){
+        panier.Disponibilite = [0,0,0,0,0];
+    };
 
-        if (panier.Disponibilite.length == 0){
-            panier.Disponibilite = [0,0,0,0,0];
+     // Calculer le nombre de place disponbile
+    for (let compteur = 0; compteur < 5; compteur ++){
+        panier.Disponibilite[compteur] = COURSES[compteur+1]['stock'] - panier.QTT[compteur];
+        // Vérifier si panier.Disponibilite[compteur] est un nombre.
+        // Lors du premier chargement ce n'est pas un nombre (NaN) car localStorage est vide.
+        // Dans ce cas on lui déclare la valeur max disponible.
+        if(isNaN(panier.Disponibilite[compteur]) == true){
+            panier.Disponibilite[compteur]=COURSES[compteur+1]['stock'];
         };
+    };
 
-        // Calculer le nombre de place disponbile
-        for (let compteur = 0; compteur < 5; compteur ++){
-            panier.Disponibilite[compteur] = COURSES[compteur+1]['stock'] - panier.QTT[compteur];
-            // Vérifier si panier.Disponibilite[compteur] est un nombre.
-            // Lors du premier chargement ce n'est pas un nombre car LocalStorage est vide.
-            // Dans ce cas on lui déclare la valeur max disponible.
-            if(isNaN(panier.Disponibilite[compteur]) == true){
-                panier.Disponibilite[compteur]=COURSES[compteur+1]['stock'];
-            };
-        };
+    // Mettre à jour le tableau dans localStorage
+    // Créer une clée
+    let key = "Panier";
 
-        // Mettre à jour le tableau dans localStorage
-        // Créer une clée
-        let key = "Panier";
+    // Convetir en JSON et enregistrer dans localStorage 
+    stockageObject= JSON.stringify(panier);
 
-        // Convetir en JSON et enregistrer dans localStorage 
-        stockageObject= JSON.stringify(panier);
+    // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
+    window.localStorage.setItem(key, stockageObject)
+};
 
-        // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
-        window.localStorage.setItem(key, stockageObject)
+// Fonction pour mettre à jour dans localStorage le nombre de place disponible après la suppression d'un cours
+function updateAvailabilitesAfterDeletion(idArticle){
+
+    // Récupérer le panier conservé dans le localStorage
+    let panier = checkPanierlocalStorage();
+
+    // Calculer le nombre de place disponbile
+    panier.Disponibilite[idArticle] += 1;
+    console.log("Nouvelle disponibilité", panier.Disponibilite);
+
+    // Mettre à jour le tableau dans localStorage
+    // Créer une clée
+    let key = "Panier";
+
+    // Convetir en JSON et enregistrer dans localStorage 
+    stockageObject= JSON.stringify(panier);
+
+    // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
+    window.localStorage.setItem(key, stockageObject)
 };
 
 // Fonction pour afficher le nombre de cours encore disponible sur la pge HTML
@@ -355,6 +357,8 @@ function ajouterNotification(messageAffiche, idCours){
         notificationContainer.style.top= "520px";
     }else if(compteurPosition == 7){
         notificationContainer.style.top= "600px";
+    }else if(compteurPosition == 8){
+        notificationContainer.style.top= "680px";
     }
 
     // Incrémenter le compteur de position
@@ -375,21 +379,50 @@ function ajouterNotification(messageAffiche, idCours){
     notificationContent.appendChild(notificationTexte);
 
     // Adapter le contenu affiché en fonction du bouton sur lequel on a cliqué
-    if(idCours == 1){
-        notificationTexte.innerText= "UIUX" + messageAffiche;
-    }else if(idCours == 2){
-        notificationTexte.innerText= "PHP 8" + messageAffiche;
-    }else if(idCours == 3){
-        notificationTexte.innerText= "REACT JS" + messageAffiche;
-    }else if(idCours == 4){
-        notificationTexte.innerText= "NODE JS" + messageAffiche;
-    }else if(idCours == 5){
-        notificationTexte.innerText= "MYSQL" + messageAffiche;
+    if(messageAffiche == " a été ajouté au panier !"){
+        if(idCours == 1){
+            notificationTexte.innerText= "UIUX" + messageAffiche;
+        }else if(idCours == 2){
+            notificationTexte.innerText= "PHP 8" + messageAffiche;
+        }else if(idCours == 3){
+            notificationTexte.innerText= "REACT JS" + messageAffiche;
+        }else if(idCours == 4){
+            notificationTexte.innerText= "NODE JS" + messageAffiche;
+        }else if(idCours == 5){
+            notificationTexte.innerText= "MYSQL" + messageAffiche;
+        };
+    }else if(messageAffiche == " a été supprimé du panier !"){
+        if(idCours == 1){
+            notificationTexte.innerText= "UIUX" + messageAffiche;
+        }else if(idCours == 2){
+            notificationTexte.innerText= "PHP 8" + messageAffiche;
+        }else if(idCours == 3){
+            notificationTexte.innerText= "REACT JS" + messageAffiche;
+        }else if(idCours == 4){
+            notificationTexte.innerText= "NODE JS" + messageAffiche;
+        }else if(idCours == 5){
+            notificationTexte.innerText= "MYSQL" + messageAffiche;
+        };
+    }else if(messageAffiche == "Le cours "){
+        if(idCours == 1){
+            notificationTexte.innerText= messageAffiche + "UIUX" + notificationCoursIndisponibleFin;
+        }else if(idCours == 2){
+            notificationTexte.innerText= messageAffiche + "PHP 8" + notificationCoursIndisponibleFin;
+        }else if(idCours == 3){
+            notificationTexte.innerText= messageAffiche + "REACT JS" + notificationCoursIndisponibleFin;
+        }else if(idCours == 4){
+            notificationTexte.innerText= messageAffiche + "NODE JS" + notificationCoursIndisponibleFin;
+        }else if(idCours == 5){
+            notificationTexte.innerText= messageAffiche + "MYSQL" + notificationCoursIndisponibleFin;
+        };
+    }else if(idCours == "Suppression"){
+        notificationTexte.innerText= notificationPanierVide;
     }
     
     // Supprimer la notification au bout de 3 secondes
     setTimeout(function(){
         notificationContainer.remove();
+        // Réduire le compteur de position
         compteurPosition--;
     }, 3000);  
 };
@@ -411,5 +444,110 @@ emptyCart.addEventListener("click",function(){
     // Mettre à jour les valeurs de disponibilité et leur contenu en HTML.
     updateAvailabilites();
     displayAvailabilites();
-    ajouterNotification(notificationPanierVide);
+    ajouterNotification(notificationPanierVide,"Suppression");
+
+    // Effacer tous le contenu du tableau du panier
+    while (document.querySelector('tbody').firstChild) {
+        document.querySelector('tbody').removeChild(document.querySelector('tbody').lastChild);
+      };
 });
+
+/************************************
+ * 
+ * Affichage dynamique
+ * 
+ ************************************/
+
+function affichageDynamique(){
+/*Tableau pour moduler les classes .mark.m_1, .mark.m_2.... */
+let marks = ['m_1','m_2','m_3','m_4','m_5'];  
+/* Récupération du mark (note des utilisateurs) dans le tableau COURSES 
+moins 1 pour faire correspondre au tableau marks */
+let indice_mark = COURSES[1]['mark']-1;
+
+//Récupération de l'extention .m_X 
+let score_mark = marks[indice_mark];
+
+//Récupération des éléments de classe container
+let cours_contener_all = document.querySelectorAll(".courses__container");
+
+//selection du deuxieme cours contener. Le premier sert pour le panier vide
+let courses_container = cours_contener_all[1];
+
+//Création de la premiere Div
+let div_course__item = document.createElement("div");
+//Ajout de la classe cours__item à la div
+div_course__item.className="course__item";
+// On met la Div en tant qu'enfant de cours_contener
+courses_container.appendChild(div_course__item);
+
+// Création de l'image
+let figure_cours_img = document.createElement("figure");
+figure_cours_img.className="course_img";
+div_course__item.appendChild(figure_cours_img);
+let img_cours = document.createElement("img");
+//Utiliser setAttribute pour l'argument source: src de la balise img
+img_cours.setAttribute('src',"img/courses/"+COURSES[1]["img"]);
+figure_cours_img.appendChild(img_cours);
+
+// Création de la carte
+let div_info__card = document.createElement("div");
+div_info__card.className="info__card";
+div_course__item.appendChild(div_info__card);
+
+// Création du titre
+let h4 = document.createElement("h4");
+h4.innerHTML = COURSES[1]["title"];
+div_info__card.appendChild(h4);
+
+// Création de la note
+let figure_mark = document.createElement("figure");
+figure_mark.className="mark "+score_mark;
+div_info__card.appendChild(figure_mark);
+let img_rates = document.createElement("img");
+img_rates.setAttribute('src',"img/rates.png");
+figure_mark.appendChild(img_rates);
+
+// Création du premier prix
+let premier_p = document.createElement("p");
+div_info__card.appendChild(premier_p);
+let span_price = document.createElement("span");
+span_price.className="price";
+span_price.innerHTML = COURSES[1]["initial_price"]+" €";
+premier_p.appendChild(span_price);
+
+// Création du prix avec réduction
+let span_discount = document.createElement("span");
+span_discount.className="discount";
+span_discount.innerHTML = COURSES[1]["price"]+" €";
+premier_p.appendChild(span_discount);
+let deuxieme_p = document.createElement("p");
+div_info__card.appendChild(deuxieme_p);
+
+// Création du nombre de place disponible
+deuxieme_p.innerHTML = "Disponible:"
+let span_stock = document.createElement("span");
+span_stock.className="stock";
+/***************************************************************************************** */
+            span_stock.innerHTML = "10" ;/*  Etat du stock à mettre depuis Sessionstorage  */
+/***************************************************************************************** */
+deuxieme_p.appendChild(span_stock);
+
+// Création du lien
+let a_Ajout_Panier = document.createElement("a");
+// Ici aussi utiliser setAttribute pour le href de l'ancre <a>
+a_Ajout_Panier.setAttribute("href","#");
+a_Ajout_Panier.className="add-to-cart";
+// aussi setAttribute pour l'argument data-id
+ a_Ajout_Panier.setAttribute("data-id","3");
+
+/** .              !!!!!PROBLEME!!!!!                              */
+/* Le texte se met à gauche du logo chariot au lieu de la droite */
+let i_Fa_Fa = document.createElement("i");
+i_Fa_Fa.className = "fa fa-cart-plus";
+a_Ajout_Panier.innerHTML = "Ajouter au panier"; 
+div_info__card.appendChild(a_Ajout_Panier);
+a_Ajout_Panier.appendChild(i_Fa_Fa);
+//i_Fa_Fa.innerHTML = "Ajouter au panier";  
+/*Test pour intervertir le chariot et Ajouter au panier. Fonctionne mais polices au mauvais format*/
+}
