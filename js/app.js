@@ -5,7 +5,7 @@
  ************************************/
 
 // Mettre à jour le panier en fonction du contenu enregistré dans localStorage
-miseAJourPanier()
+miseAJourPanier();
 // Supprimer les anciennes fiches de cours
 const anciennesFiches = document.querySelectorAll('.course__item');
 anciennesFiches.forEach(function(item){
@@ -15,7 +15,7 @@ anciennesFiches.forEach(function(item){
 // Génerer l'affichage dynamique des fiches de cours
 for(let compteur = 1; compteur < 6; compteur ++){
     affichageDynamique(compteur);
-}
+};
 
 // Charger les 5 cours
 const lienCoursUIUX = document.querySelector('[data-id="1"]');
@@ -74,6 +74,7 @@ function recoverid(){
                 // Ajoter une ligne dans le panier
                 ajouteLigne(boutonclique);
             }else{
+                // Ajouter une notification correspondant au cours cliqué
                 ajouterNotification(notificationCoursIndisponibleDebut,boutonclique);
                 // Changer le style pour visualiser que le cours est indisponible
                 afficherIndisponible();
@@ -127,7 +128,7 @@ function saveInLocalStorage(value){
 
 // Calculer les quantités de cours dans le panier
 function calculQuantitePanier(){ 
-    // Charger le panier
+    // Charger le panier enregistré dans localStorage
     let panier = checkPanierlocalStorage();
     // Mettre à 0 les 5 compteurs
     let quantiteCours1, quantiteCours2, quantiteCours3, quantiteCours4, quantiteCours5;
@@ -185,8 +186,6 @@ function ajouteLigne(idCours){
     // Insère une ligne dans la table à l'indice de ligne 0
     let nouvelleLigne = refTable.insertRow(0);
 
-    nouvelleLigne.innerHTML = '<td></td>';
-
     // Insère une cellule dans la ligne à l'indice n
     let nouvelleCellule0 = nouvelleLigne.insertCell(0);
     let nouvelleCellule1 = nouvelleLigne.insertCell(1);
@@ -199,13 +198,12 @@ function ajouteLigne(idCours){
     let cell0 = document.createElement('img');
     cell0.setAttribute('src',"img/courses/"+COURSES[idCours]['img']);
     let cell1 = document.createTextNode(COURSES[idCours]["title"]);
-    let cell2 = document.createTextNode(COURSES[idCours]["initial_price"]);
+    let cell2 = document.createTextNode(COURSES[idCours]["price"]);
     let cell3 = document.createTextNode(panierProduit.QTT[idCours-1]);
-    let cell4 = document.createElement("INPUT");
-    cell4.setAttribute("TYPE", "button");
-
-    // Mettre la bonne classe pour le bouton
-    cell4.classList.add('supprimer-item');
+    let cell4 = document.createElement("div");
+    cell4.className=("supprimer-item");
+    cell4.innerHTML ="X";
+    cell4.style.cursor="pointer";
       
     cell4.addEventListener("click", function(){
         // Supprime le bouton puis son parent
@@ -268,8 +266,9 @@ function updateAvailabilites(){
         panier.Disponibilite = [0,0,0,0,0];
     };
 
-     // Calculer le nombre de place disponbile
+     // Calculer le nombre de places disponbiles
     for (let compteur = 0; compteur < 5; compteur ++){
+        // Calcul à partir du stock disponible et de la quantité enregistrée dans le localStorage
         panier.Disponibilite[compteur] = COURSES[compteur+1]['stock'] - panier.QTT[compteur];
         // Vérifier si panier.Disponibilite[compteur] est un nombre.
         // Lors du premier chargement ce n'est pas un nombre (NaN) car localStorage est vide.
@@ -287,7 +286,7 @@ function updateAvailabilites(){
     stockageObject= JSON.stringify(panier);
 
     // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
-    window.localStorage.setItem(key, stockageObject)
+    window.localStorage.setItem(key, stockageObject);
 };
 
 // Fonction pour mettre à jour dans localStorage le nombre de place disponible après la suppression d'un cours
@@ -400,6 +399,7 @@ let compteurPosition = 0;
 function ajouterNotification(messageAffiche, idCours){
     // Créer le conteneur de la notification
     const notificationContainer = document.createElement('div');
+    // Ajouter un attribut avec l'ID
     notificationContainer.setAttribute('id','notification_container');
     // Modifier le z-index pour éviter que les notifications apparaissent derrière les fiches de cours sur les petits écrans
     notificationContainer.style.zIndex = "999"; 
@@ -431,7 +431,6 @@ function ajouterNotification(messageAffiche, idCours){
     // Créer la div de contenu
     const notificationContent = document.createElement('div');
     notificationContainer.appendChild(notificationContent);
-
     notificationContent.classList.add('content');
 
     // Ajouter une image dans la div de contenu
@@ -484,8 +483,9 @@ function ajouterNotification(messageAffiche, idCours){
         notificationTexte.innerText= notificationPanierVide;
     }
     
-    // Supprimer la notification au bout de 3 secondes
+    // Supprimer la notification au bout de 3 secondes (3000 ms)
     setTimeout(function(){
+        // Enlever la notification
         notificationContainer.remove();
         // Réduire le compteur de position
         compteurPosition--;
@@ -494,7 +494,7 @@ function ajouterNotification(messageAffiche, idCours){
 
 /************************************
  * 
- * Mise à jour du panier
+ * Mise à jour du panier au chargement de la page
  * 
  ************************************/
 
@@ -503,6 +503,7 @@ function miseAJourPanier(){
     // Récupérer le panier conservé dans le localStorage
     let panier = checkPanierlocalStorage();
 
+    // Regarder pour chaque élément de panier et ajouter une ligne dans le panier pour chacune
     panier.Article.forEach(function(coursPanier){
         ajouteLigne(coursPanier);
     });
@@ -517,21 +518,24 @@ function miseAJourPanier(){
 // Charger le bouton pour effacer le contenu du panier
 const emptyCart = document.querySelector('#empty-cart');
 
-// Effacer le contenu du localStorage lorsque l'on clique sur le bouton
+// Effacer le contenu du localStorage lorsque l'on clique sur le bouton’
 emptyCart.addEventListener("click",function(){
     // Effacer le contenu de localStorage
-    window.localStorage.clear()
+    window.localStorage.clear();
 
     // Mettre à jour les valeurs de disponibilité et leur contenu en HTML.
     updateAvailabilites();
     displayAvailabilites();
+    // Notification de suppression
     ajouterNotification(notificationPanierVide,"Suppression");
+    // Mettre à jour les cours disponibles / indisponibles
     afficherIndisponible();
 
-    // Effacer tous le contenu du tableau du panier
+    // Effacer tout le contenu du tableau du panier
+    // Tant que tbody a des enfants supprimer tous les enfants de tbody
     while (document.querySelector('tbody').firstChild) {
         document.querySelector('tbody').removeChild(document.querySelector('tbody').lastChild);
-      };
+    };
 });
 
 /************************************
@@ -607,12 +611,10 @@ function affichageDynamique(idCours){
     div_info__card.appendChild(deuxieme_p);
 
     // Création du nombre de place disponible
-    deuxieme_p.innerHTML = "Disponible:"
+    deuxieme_p.innerHTML = "Disponible:";
     let span_stock = document.createElement("span");
     span_stock.className="stock";
-    /***************************************************************************************** */
-                span_stock.innerHTML = COURSES[idCours]["stock"] ;/*  Etat du stock à mettre depuis Sessionstorage  */
-    /***************************************************************************************** */
+    span_stock.innerHTML = COURSES[idCours]["stock"] ;
     deuxieme_p.appendChild(span_stock);
 
     // Création du lien

@@ -11,7 +11,7 @@ const searchItem = document.querySelector("#search-item > input");
 const NoCourse = document.querySelector('#no_course');
 
 // Récupérer le mot écrit dans la barre de recherche et le tester
-searchItem.addEventListener('input', function() {
+searchItem.addEventListener('input', function(){
     let inputsearch = searchItem.value;
     // convertir l'entrée de la barre de recherche en minuscule pour éviter les problèmes de casses
     let inputSearchLC = inputsearch.toLowerCase();
@@ -46,10 +46,10 @@ searchItem.addEventListener('input', function() {
     
     // Afficher aucun cours de disponible
     if(showUIUX == false && showPHP == false && showREACT == false && showNODE == false && showMYSQL == false){
-        NoCourse.classList.remove('hidden')
+        NoCourse.classList.remove('hidden');
     }else{
-        NoCourse.classList.add('hidden')
-    }
+        NoCourse.classList.add('hidden');
+    };
 });
 
 // Vérifier si le mot correspond à PHP
@@ -106,12 +106,3 @@ function findWordMYSQL(input){
         };
     });
 };
-
-// Archive - tentative avec regex
-/*
-    let regex = /php/g
-    console.log(inputsearch.search(regex));
-
-if(inputsearch.search(regex) !== -1){
-    console.log("Super ça fonctionne");
-}*/
