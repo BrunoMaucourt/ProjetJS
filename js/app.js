@@ -23,6 +23,8 @@ let showMYSQL = true;
 
 // Génerer l'affichage dynamique
 affichageDynamique()
+// Mettre à jour le panier en fonction du contenu enregistré dans localStorage
+miseAJourPanier()
 // Charger la fonction pour récupérer les cliques sur les boutons
 recoverid();
 // Mettre à jour les quantitées disponibles sur la page HTML
@@ -196,7 +198,6 @@ function ajouteLigne(idCours){
         // Supprime le bouton puis son parent
         let cible =this.parentElement.parentElement;
         cible.remove();
-        console.log(cible, " supprimé");
     });
 
     // Créer les cellules de la ligne
@@ -284,7 +285,6 @@ function updateAvailabilitesAfterDeletion(idArticle){
 
     // Calculer le nombre de place disponbile
     panier.Disponibilite[idArticle] += 1;
-    console.log("Nouvelle disponibilité", panier.Disponibilite);
 
     // Mettre à jour le tableau dans localStorage
     // Créer une clée
@@ -429,6 +429,22 @@ function ajouterNotification(messageAffiche, idCours){
 
 /************************************
  * 
+ * Mise à jour du panier
+ * 
+ ************************************/
+
+function miseAJourPanier(){
+
+    // Récupérer le panier conservé dans le localStorage
+    let panier = checkPanierlocalStorage();
+
+    panier.Article.forEach(function(coursPanier){
+        ajouteLigne(coursPanier);
+    });
+};
+
+/************************************
+ * 
  * Vider le panier
  * 
  ************************************/
@@ -459,95 +475,93 @@ emptyCart.addEventListener("click",function(){
  ************************************/
 
 function affichageDynamique(){
-/*Tableau pour moduler les classes .mark.m_1, .mark.m_2.... */
-let marks = ['m_1','m_2','m_3','m_4','m_5'];  
-/* Récupération du mark (note des utilisateurs) dans le tableau COURSES 
-moins 1 pour faire correspondre au tableau marks */
-let indice_mark = COURSES[1]['mark']-1;
+    /*Tableau pour moduler les classes .mark.m_1, .mark.m_2.... */
+    let marks = ['m_1','m_2','m_3','m_4','m_5'];  
+    /* Récupération du mark (note des utilisateurs) dans le tableau COURSES 
+    moins 1 pour faire correspondre au tableau marks */
+    let indice_mark = COURSES[1]['mark']-1;
 
-//Récupération de l'extention .m_X 
-let score_mark = marks[indice_mark];
+    //Récupération de l'extention .m_X 
+    let score_mark = marks[indice_mark];
 
-//Récupération des éléments de classe container
-let cours_contener_all = document.querySelectorAll(".courses__container");
+    //Récupération des éléments de classe container
+    let cours_contener_all = document.querySelectorAll(".courses__container");
 
-//selection du deuxieme cours contener. Le premier sert pour le panier vide
-let courses_container = cours_contener_all[1];
+    //selection du deuxieme cours contener. Le premier sert pour le panier vide
+    let courses_container = cours_contener_all[1];
 
-//Création de la premiere Div
-let div_course__item = document.createElement("div");
-//Ajout de la classe cours__item à la div
-div_course__item.className="course__item";
-// On met la Div en tant qu'enfant de cours_contener
-courses_container.appendChild(div_course__item);
+    //Création de la premiere Div
+    let div_course__item = document.createElement("div");
+    //Ajout de la classe cours__item à la div
+    div_course__item.className="course__item";
+    // On met la Div en tant qu'enfant de cours_contener
+    courses_container.appendChild(div_course__item);
 
-// Création de l'image
-let figure_cours_img = document.createElement("figure");
-figure_cours_img.className="course_img";
-div_course__item.appendChild(figure_cours_img);
-let img_cours = document.createElement("img");
-//Utiliser setAttribute pour l'argument source: src de la balise img
-img_cours.setAttribute('src',"img/courses/"+COURSES[1]["img"]);
-figure_cours_img.appendChild(img_cours);
+    // Création de l'image
+    let figure_cours_img = document.createElement("figure");
+    figure_cours_img.className="course_img";
+    div_course__item.appendChild(figure_cours_img);
+    let img_cours = document.createElement("img");
+    //Utiliser setAttribute pour l'argument source: src de la balise img
+    img_cours.setAttribute('src',"img/courses/"+COURSES[1]["img"]);
+    figure_cours_img.appendChild(img_cours);
 
-// Création de la carte
-let div_info__card = document.createElement("div");
-div_info__card.className="info__card";
-div_course__item.appendChild(div_info__card);
+    // Création de la carte
+    let div_info__card = document.createElement("div");
+    div_info__card.className="info__card";
+    div_course__item.appendChild(div_info__card);
 
-// Création du titre
-let h4 = document.createElement("h4");
-h4.innerHTML = COURSES[1]["title"];
-div_info__card.appendChild(h4);
+    // Création du titre
+    let h4 = document.createElement("h4");
+    h4.innerHTML = COURSES[1]["title"];
+    div_info__card.appendChild(h4);
 
-// Création de la note
-let figure_mark = document.createElement("figure");
-figure_mark.className="mark "+score_mark;
-div_info__card.appendChild(figure_mark);
-let img_rates = document.createElement("img");
-img_rates.setAttribute('src',"img/rates.png");
-figure_mark.appendChild(img_rates);
+    // Création de la note
+    let figure_mark = document.createElement("figure");
+    figure_mark.className="mark "+score_mark;
+    div_info__card.appendChild(figure_mark);
+    let img_rates = document.createElement("img");
+    img_rates.setAttribute('src',"img/rates.png");
+    figure_mark.appendChild(img_rates);
 
-// Création du premier prix
-let premier_p = document.createElement("p");
-div_info__card.appendChild(premier_p);
-let span_price = document.createElement("span");
-span_price.className="price";
-span_price.innerHTML = COURSES[1]["initial_price"]+" €";
-premier_p.appendChild(span_price);
+    // Création du premier prix
+    let premier_p = document.createElement("p");
+    div_info__card.appendChild(premier_p);
+    let span_price = document.createElement("span");
+    span_price.className="price";
+    span_price.innerHTML = COURSES[1]["initial_price"]+" €";
+    premier_p.appendChild(span_price);
 
-// Création du prix avec réduction
-let span_discount = document.createElement("span");
-span_discount.className="discount";
-span_discount.innerHTML = COURSES[1]["price"]+" €";
-premier_p.appendChild(span_discount);
-let deuxieme_p = document.createElement("p");
-div_info__card.appendChild(deuxieme_p);
+    // Création du prix avec réduction
+    let span_discount = document.createElement("span");
+    span_discount.className="discount";
+    span_discount.innerHTML = COURSES[1]["price"]+" €";
+    premier_p.appendChild(span_discount);
+    let deuxieme_p = document.createElement("p");
+    div_info__card.appendChild(deuxieme_p);
 
-// Création du nombre de place disponible
-deuxieme_p.innerHTML = "Disponible:"
-let span_stock = document.createElement("span");
-span_stock.className="stock";
-/***************************************************************************************** */
-            span_stock.innerHTML = "10" ;/*  Etat du stock à mettre depuis Sessionstorage  */
-/***************************************************************************************** */
-deuxieme_p.appendChild(span_stock);
+    // Création du nombre de place disponible
+    deuxieme_p.innerHTML = "Disponible:"
+    let span_stock = document.createElement("span");
+    span_stock.className="stock";
+    /***************************************************************************************** */
+                span_stock.innerHTML = "10" ;/*  Etat du stock à mettre depuis Sessionstorage  */
+    /***************************************************************************************** */
+    deuxieme_p.appendChild(span_stock);
 
-// Création du lien
-let a_Ajout_Panier = document.createElement("a");
-// Ici aussi utiliser setAttribute pour le href de l'ancre <a>
-a_Ajout_Panier.setAttribute("href","#");
-a_Ajout_Panier.className="add-to-cart";
-// aussi setAttribute pour l'argument data-id
- a_Ajout_Panier.setAttribute("data-id","3");
+    // Création du lien
+    let a_Ajout_Panier = document.createElement("a");
+    div_info__card.appendChild(a_Ajout_Panier);
+    // Ici aussi utiliser setAttribute pour le href de l'ancre <a>
+    a_Ajout_Panier.setAttribute("href","#");
+    a_Ajout_Panier.className="add-to-cart";
+    // aussi setAttribute pour l'argument data-id
+    a_Ajout_Panier.setAttribute("data-id","3");
 
-/** .              !!!!!PROBLEME!!!!!                              */
-/* Le texte se met à gauche du logo chariot au lieu de la droite */
-let i_Fa_Fa = document.createElement("i");
-i_Fa_Fa.className = "fa fa-cart-plus";
-a_Ajout_Panier.innerHTML = "Ajouter au panier"; 
-div_info__card.appendChild(a_Ajout_Panier);
-a_Ajout_Panier.appendChild(i_Fa_Fa);
-//i_Fa_Fa.innerHTML = "Ajouter au panier";  
-/*Test pour intervertir le chariot et Ajouter au panier. Fonctionne mais polices au mauvais format*/
-}
+    // Ajouter le logo et le texte dans le lien
+    let i_Fa_Fa = document.createElement("i");
+    i_Fa_Fa.className = "fa fa-cart-plus";
+    a_Ajout_Panier.appendChild(i_Fa_Fa);
+    let a_Ajout_Panier_text = document.createTextNode("Ajouter au panier");
+    a_Ajout_Panier.appendChild(a_Ajout_Panier_text);
+};
