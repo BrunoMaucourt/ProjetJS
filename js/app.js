@@ -4,6 +4,19 @@
  * 
  ************************************/
 
+// Mettre à jour le panier en fonction du contenu enregistré dans localStorage
+miseAJourPanier()
+// Supprimer les anciennes fiches de cours
+const anciennesFiches = document.querySelectorAll('.course__item');
+anciennesFiches.forEach(function(item){
+    item.remove();
+});
+
+// Génerer l'affichage dynamique des fiches de cours
+for(let compteur = 1; compteur < 6; compteur ++){
+    affichageDynamique(compteur);
+}
+
 // Charger les 5 cours
 const lienCoursUIUX = document.querySelector('[data-id="1"]');
 const ficheUIUX = lienCoursUIUX.parentNode.parentNode;
@@ -21,15 +34,13 @@ const lienCoursMYSQL = document.querySelector('[data-id="5"]');
 const ficheMYSQL = lienCoursMYSQL.parentNode.parentNode;
 let showMYSQL = true;
 
-// Génerer l'affichage dynamique
-affichageDynamique()
-// Mettre à jour le panier en fonction du contenu enregistré dans localStorage
-miseAJourPanier()
 // Charger la fonction pour récupérer les cliques sur les boutons
 recoverid();
 // Mettre à jour les quantitées disponibles sur la page HTML
 updateAvailabilites();
 displayAvailabilites();
+afficherIndisponible();
+
 
 /************************************
  * 
@@ -59,11 +70,14 @@ function recoverid(){
                 updateAvailabilites();
                 displayAvailabilites();
                 ajouterNotification(notificationAjoutPanier, boutonclique);
+                afficherIndisponible();
                 // Ajoter une ligne dans le panier
                 ajouteLigne(boutonclique);
             }else{
                 ajouterNotification(notificationCoursIndisponibleDebut,boutonclique);
-            }
+                // Changer le style pour visualiser que le cours est indisponible
+                afficherIndisponible();
+            };
         });
     });
 };
@@ -154,9 +168,8 @@ function miseAJourQuantitePanier(table){
     stockageObject= JSON.stringify(panier);
 
     // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
-    window.localStorage.setItem(key, stockageObject)
+    window.localStorage.setItem(key, stockageObject);
 };
-
 
 /* ------------------------------------------------------
 LA FONCTION AFFICHAGE PANIER - REMI & JAMES
@@ -222,7 +235,7 @@ function checkAvailabilities(idATester){
 
     // Récupérer le panier conservé dans le localStorage
     let panier = checkPanierlocalStorage();
-    let tableauQuantite = panier.QTT
+    let tableauQuantite = panier.QTT;
 
     // Créer une variable simulant la nouvelle disponibilité
     let quantiteATester;
@@ -233,7 +246,7 @@ function checkAvailabilities(idATester){
     }else{
         // Calculer la quantité dans localStorage plus un
         quantiteATester = tableauQuantite[idATester-1] + 1;
-    }
+    };
 
     // Renvoyer un résultat différent en fonction de la comparaison entre le nombre de place disponible et celui à tester
     if(disponibiliteMax >= quantiteATester){
@@ -294,7 +307,7 @@ function updateAvailabilitesAfterDeletion(idArticle){
     stockageObject= JSON.stringify(panier);
 
     // Enregistrer dans localstore la clé ainsi que la valeur qui a été utilisée comme argument de la fonction
-    window.localStorage.setItem(key, stockageObject)
+    window.localStorage.setItem(key, stockageObject);
 };
 
 // Fonction pour afficher le nombre de cours encore disponible sur la pge HTML
@@ -317,7 +330,56 @@ function displayAvailabilites(){
     quantiteFicheREACT.innerHTML = tableauDisponibilite[2];
     quantiteFicheNODE.innerHTML = tableauDisponibilite[3];
     quantiteFicheMYSQL.innerHTML = tableauDisponibilite[4];
-}
+};
+
+// Fonction pour modifier l'affichage des cours indisponibles
+function afficherIndisponible(){
+
+    // Récupérer le panier conservé dans le localStorage
+    let panier = checkPanierlocalStorage();
+
+    // Tester pour chaque cours s'il faut modifier l'affichage
+
+    if(panier.Disponibilite[0] == 0){
+        ficheUIUX.style.border="solid 5px red";
+        ficheUIUX.style.opacity="0.5";
+    }else{
+        ficheUIUX.style.border="1px solid rgba(0,0,0,0.25)";
+        ficheUIUX.style.opacity="1.0";
+    };
+    
+    if(panier.Disponibilite[1] == 0){
+        fichePHP.style.border="solid 5px red";
+        fichePHP.style.opacity="0.5";
+    }else{
+        fichePHP.style.border="1px solid rgba(0,0,0,0.25)";
+        fichePHP.style.opacity="1.0";
+    };
+    
+    if(panier.Disponibilite[2] == 0){
+        ficheREACT.style.border="solid 5px red";
+        ficheREACT.style.opacity="0.5";
+    }else{
+        ficheREACT.style.border="1px solid rgba(0,0,0,0.25)";
+        ficheREACT.style.opacity="1.0";
+    };
+    
+    if(panier.Disponibilite[3] == 0){
+        ficheNODE.style.border="solid 5px red";
+        ficheNODE.style.opacity="0.5";
+    }else{
+        ficheNODE.style.border="1px solid rgba(0,0,0,0.25)";
+        ficheNODE.style.opacity="1.0";
+    };
+
+    if(panier.Disponibilite[4] == 0){
+        ficheMYSQL.style.border="solid 5px red";
+        ficheMYSQL.style.opacity="0.5";
+    }else{
+        ficheMYSQL.style.border="1px solid rgba(0,0,0,0.25)";
+        ficheMYSQL.style.opacity="1.0";
+    };
+};
 
 /************************************
  * 
@@ -339,6 +401,8 @@ function ajouterNotification(messageAffiche, idCours){
     // Créer le conteneur de la notification
     const notificationContainer = document.createElement('div');
     notificationContainer.setAttribute('id','notification_container');
+    // Modifier le z-index pour éviter que les notifications apparaissent derrière les fiches de cours sur les petits écrans
+    notificationContainer.style.zIndex = "999"; 
     document.querySelector('#header').appendChild(notificationContainer);
     // Adapter la position où apparait les notifications
     if(compteurPosition ==0){
@@ -359,7 +423,7 @@ function ajouterNotification(messageAffiche, idCours){
         notificationContainer.style.top= "600px";
     }else if(compteurPosition == 8){
         notificationContainer.style.top= "680px";
-    }
+    };
 
     // Incrémenter le compteur de position
     compteurPosition++;
@@ -367,6 +431,7 @@ function ajouterNotification(messageAffiche, idCours){
     // Créer la div de contenu
     const notificationContent = document.createElement('div');
     notificationContainer.appendChild(notificationContent);
+
     notificationContent.classList.add('content');
 
     // Ajouter une image dans la div de contenu
@@ -461,6 +526,7 @@ emptyCart.addEventListener("click",function(){
     updateAvailabilites();
     displayAvailabilites();
     ajouterNotification(notificationPanierVide,"Suppression");
+    afficherIndisponible();
 
     // Effacer tous le contenu du tableau du panier
     while (document.querySelector('tbody').firstChild) {
@@ -474,12 +540,12 @@ emptyCart.addEventListener("click",function(){
  * 
  ************************************/
 
-function affichageDynamique(){
+function affichageDynamique(idCours){
     /*Tableau pour moduler les classes .mark.m_1, .mark.m_2.... */
     let marks = ['m_1','m_2','m_3','m_4','m_5'];  
     /* Récupération du mark (note des utilisateurs) dans le tableau COURSES 
     moins 1 pour faire correspondre au tableau marks */
-    let indice_mark = COURSES[1]['mark']-1;
+    let indice_mark = COURSES[idCours]['mark']-1;
 
     //Récupération de l'extention .m_X 
     let score_mark = marks[indice_mark];
@@ -503,7 +569,7 @@ function affichageDynamique(){
     div_course__item.appendChild(figure_cours_img);
     let img_cours = document.createElement("img");
     //Utiliser setAttribute pour l'argument source: src de la balise img
-    img_cours.setAttribute('src',"img/courses/"+COURSES[1]["img"]);
+    img_cours.setAttribute('src',"img/courses/"+COURSES[idCours]["img"]);
     figure_cours_img.appendChild(img_cours);
 
     // Création de la carte
@@ -513,7 +579,7 @@ function affichageDynamique(){
 
     // Création du titre
     let h4 = document.createElement("h4");
-    h4.innerHTML = COURSES[1]["title"];
+    h4.innerHTML = COURSES[idCours]["title"];
     div_info__card.appendChild(h4);
 
     // Création de la note
@@ -529,13 +595,13 @@ function affichageDynamique(){
     div_info__card.appendChild(premier_p);
     let span_price = document.createElement("span");
     span_price.className="price";
-    span_price.innerHTML = COURSES[1]["initial_price"]+" €";
+    span_price.innerHTML = COURSES[idCours]["initial_price"]+" €";
     premier_p.appendChild(span_price);
 
     // Création du prix avec réduction
     let span_discount = document.createElement("span");
     span_discount.className="discount";
-    span_discount.innerHTML = COURSES[1]["price"]+" €";
+    span_discount.innerHTML = COURSES[idCours]["price"]+" €";
     premier_p.appendChild(span_discount);
     let deuxieme_p = document.createElement("p");
     div_info__card.appendChild(deuxieme_p);
@@ -545,7 +611,7 @@ function affichageDynamique(){
     let span_stock = document.createElement("span");
     span_stock.className="stock";
     /***************************************************************************************** */
-                span_stock.innerHTML = "10" ;/*  Etat du stock à mettre depuis Sessionstorage  */
+                span_stock.innerHTML = COURSES[idCours]["stock"] ;/*  Etat du stock à mettre depuis Sessionstorage  */
     /***************************************************************************************** */
     deuxieme_p.appendChild(span_stock);
 
@@ -556,7 +622,7 @@ function affichageDynamique(){
     a_Ajout_Panier.setAttribute("href","#");
     a_Ajout_Panier.className="add-to-cart";
     // aussi setAttribute pour l'argument data-id
-    a_Ajout_Panier.setAttribute("data-id","3");
+    a_Ajout_Panier.setAttribute("data-id",idCours);
 
     // Ajouter le logo et le texte dans le lien
     let i_Fa_Fa = document.createElement("i");
